@@ -36,6 +36,8 @@ int main(int argc, char *argv[]){
 
     // por loop infinito aqui pró select QUE VAI ESTAR Á ESCUTA DE PESSOAS PRA SE LIGAR E RECEBER MENSAGENS DE SALVAGUARDA E TAMBEM QUANDO ALGUEM SAI DE MIM
     
+
+    
     
     return 0;
 }
