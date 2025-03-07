@@ -16,6 +16,8 @@ int create_client(char *ip, char *tcp){
     errcode = getaddrinfo(ip, tcp, &hints, &res);
     if(errcode != 0)/*error*/exit(1);
 
+    //ola
+
     ssize_t n;
     n = connect(fd,res->ai_addr,res->ai_addrlen);
     if(n == -1)/*error*/exit(1);
