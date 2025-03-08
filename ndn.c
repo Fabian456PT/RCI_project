@@ -28,8 +28,6 @@ int main(int argc, char *argv[]){
 
     // por aqui um loop infinito para estar á espera das funções (interface)
 
-    // Comcei por alterar aqui
-
     ssize_t n;
     fd_set fd_commandline;
     FD_ZERO(&fd_commandline);
@@ -41,6 +39,8 @@ int main(int argc, char *argv[]){
     if (n == -1){
         printf("There was a error typing the command line\n");
     }
+
+    // iniciar estrutura dos nós !!!!!!!!!!!!!!!!!!!!!!!!!!1
 
     // If this condition is true there was an exception
     if (FD_ISSET(0, &fd_commandline) != 0){
@@ -54,7 +54,6 @@ int main(int argc, char *argv[]){
 
     //VER CONDIÇOES PARA IP E TCP DE ENTRADA PQ TALVEZ SO SEJA NECESSÁRIO CHARA A FUNÇAO CREATE SERVER
 
-    //iniciar estrutura dos nós
     int fd_client = create_client(ip, tcp);
     int fd_server = create_server("estrutura dos nós op");
 

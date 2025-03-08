@@ -31,6 +31,9 @@ typedef struct{
 
 }node;
 
+void read_stdin(char *buffer);
+
+void verify_commandline(char *buffer);
 
 int create_client();
 
