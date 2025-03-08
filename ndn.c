@@ -40,7 +40,22 @@ int main(int argc, char *argv[]){
         printf("There was a error typing the command line\n");
     }
 
-    // iniciar estrutura dos nós !!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Here we initialize our node
+
+    node our_node[1];
+
+    our_node[0].id.ip = ip;
+    our_node[0].id.tcp = tcp;
+    our_node[0].vzext.ip = NULL;
+    our_node[0].vzext.tcp = NULL;
+    our_node[0].vzsalv.ip = NULL;
+    our_node[0].vzsalv.tcp = NULL;
+    our_node[0].intr_num = 0;
+
+    for(int i = 0; i < 16; i++){
+        our_node[0].intr[i].ip = NULL;
+        our_node[0].intr[i].tcp = NULL;
+    }  
 
     // If this condition is true there was an exception
     if (FD_ISSET(0, &fd_commandline) != 0){
@@ -52,8 +67,10 @@ int main(int argc, char *argv[]){
         int command = verify_commandline(buffer);
 
         //here we are going to take the rest information about the command line (ip and tcp, if command line is just st or show topology we just do the command)
+
         int net; // variable used if the user writes join or j
-        id_struct dj_connect; // variable used to keep the ip and tcp when the user writes direct join or dj
+        id_struct dj_connect[1]; // variable used to keep the ip and tcp when the user writes direct join or dj
+
         if(command == 1){
             verify_ip_tcp(buffer, 1, dj_connect);
         }
@@ -67,10 +84,10 @@ int main(int argc, char *argv[]){
             net = verify_ip_tcp(buffer, 4);
         }
         else if(command == 5){
-            verify_ip_tcp(buffer, 5);
+            verify_ip_tcp(buffer, 5, our_node);
         }
         else if(command == 6){
-            verify_ip_tcp(buffer, 6);
+            verify_ip_tcp(buffer, 6, our_node);
         }
         else{
             printf("Invalid command line\n");

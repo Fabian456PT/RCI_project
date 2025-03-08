@@ -10,31 +10,41 @@ void read_stdin(char *buffer){
 
 }
 
-void verify_ip_tcp_connection(char *buffer, int number, id_struct dj_connect){
+void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, node *our_node){
 
     int net;
     int connect_ip;
     int connect_tcp;
 
-    if(number == 1 || number == 2){ // check if the IP and TCP are acceptable
+    if(number == 1 || number == 2){// check if the IP and TCP are acceptable
 
-        // Scan for a three-digit number in the string
-        while (*buffer){ // reads until '/0'
-            // Check the IP address
-            if (sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
-                a >= 0 && a <= 255 &&
-                b >= 0 && b <= 255 &&
-                c >= 0 && c <= 255 &&
-                d >= 0 && d <= 255) {           
-                printf("Found IP: %d.%d.%d.%d\n", a, b, c, d);
+        // Check IP address
+        if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+            a >= 0 && a <= 255 &&
+            b >= 0 && b <= 255 &&
+            c >= 0 && c <= 255 &&
+            d >= 0 && d <= 255) {
 
-                char buff[16];
-                dj_connect.ip = sprintf(buff, "%d.%d.%d.%d", a, b, c, d);
+            // Put IP as a string
+            sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
+            printf("Found IP: %s\n", ip_str);
+
+            // This moves to the first number after the IP
+            buffer += strcspn(buffer, "0123456789"); 
+
+            // See what number comes after the IP
+            if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65536){
+                dj_connect[0].ip = connect_ip;
+                dj_connect[0].tcp = connect_tcp;
+                printf("Found tcp connection: /%d\n", connect_tcp);
+            } 
+            else{
+                printf("Invalid tcp connection.\n");
             }
-            buffer++;// Move to the next character
+
+            return;
         }
-
-
+        buffer++;  
 
     }
     if(number == 3 || number == 4){ // check is the "net" is acceptable
@@ -51,12 +61,12 @@ void verify_ip_tcp_connection(char *buffer, int number, id_struct dj_connect){
         
     }
     if(number == 5 || number == 6){
-        //printf("Vizinho externo: %s %s\n", node.vzext.ip, node.vzext.tcp);
-        //printf("Vizinho salvaguarda: %s %s\n", node.vzsalv.ip, node.vzsalv.tcp);
+        printf("Vizinho externo: IP: %s  TCP: %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+        printf("Vizinho salvaguarda: IP: %s  TCP: %s\n\n", our_node[0].vzsalv.ip, our_node[0].vzsalv.tcp);
 
-        /*for(int i = 0; i < 16; i++){
-            printf("Vizinho externo: %s %s\n", node.intr[i].ip, node.intr[i].tcp);
-        }*/
+        for(int i = 0; i < 16; i++){
+            printf("Vizinho externo: IP: %s  TCP: %s\n", our_node[0].intr[i].ip, our_node[0].intr[i].tcp);
+        }
     }
 
 }
