@@ -1,5 +1,32 @@
 #include "head.h"
 
+
+void read_stdin(char *buffer){
+    int n = 99;
+
+    fgets(buffer, n, stdin);
+    //CHECK IF THIS WORKS
+    fflush(0);// this fflush makes sure that if the user writes more than 99 characteres the rest goes to the trash
+
+}
+
+void verify_commandline(char *buffer){
+    char direct_join = "direct join";
+    char dj = "dj";
+    char join = "join";
+    char j = "j";
+    char st = "st";
+    char show_topology = "show topology";
+
+    char* token = strtok(str, " ");
+
+    if(strcmp(token, dj) == 0){
+
+    }
+
+
+}
+
 int create_client(char *ip, char *tcp){
 
     int fd,errcode;
