@@ -10,27 +10,58 @@ void read_stdin(char *buffer){
 
 }
 
-int verify_ip_tcp_connection(char *buffer, int number){
+void verify_ip_tcp_connection(char *buffer, int number, id_struct dj_connect){
+
+    int net;
+    int connect_ip;
+    int connect_tcp;
 
     if(number == 1 || number == 2){ // check if the IP and TCP are acceptable
 
+        // Scan for a three-digit number in the string
+        while (*buffer){ // reads until '/0'
+            // Check the IP address
+            if (sscanf(str, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+                a >= 0 && a <= 255 &&
+                b >= 0 && b <= 255 &&
+                c >= 0 && c <= 255 &&
+                d >= 0 && d <= 255) {           
+                printf("Found IP: %d.%d.%d.%d\n", a, b, c, d);
+
+                char buff[16];
+                dj_connect.ip = sprintf(buff, "%d.%d.%d.%d", a, b, c, d);
+            }
+            buffer++;// Move to the next character
+        }
+
+
+
     }
     if(number == 3 || number == 4){ // check is the "net" is acceptable
+
+        // Scan for a three-digit number in the string
+        while (*buffer){ // reads until '/0'
+            // here we only find atmost 3 numbers
+            if (sscanf(str, "%3d", &net) == 1 && net >= 0 && net <= 999){
+                printf("Found net: %3d\n", net);
+                return net;
+            }
+            buffer++; // Move to the next character
+        }
         
     }
     if(number == 5 || number == 6){
-        printf("Vizinho externo: %s %s\n", node.vzext.ip, node.vzext.tcp);
-        printf("Vizinho salvaguarda: %s %s\n", node.vzsalv.ip, node.vzsalv.tcp);
+        //printf("Vizinho externo: %s %s\n", node.vzext.ip, node.vzext.tcp);
+        //printf("Vizinho salvaguarda: %s %s\n", node.vzsalv.ip, node.vzsalv.tcp);
 
-        for(int i = 0; i < 16; i++){
+        /*for(int i = 0; i < 16; i++){
             printf("Vizinho externo: %s %s\n", node.intr[i].ip, node.intr[i].tcp);
-        }
+        }*/
     }
-
 
 }
 
-void verify_commandline(char *buffer){
+int verify_commandline(char *buffer){
     char direct_join = "direct join";
     char dj = "dj";
     char join = "join";
@@ -45,26 +76,26 @@ void verify_commandline(char *buffer){
     res3 = strstr(buffer, join);
     res4 = strstr(buffer, j);
     res5 = strstr(buffer, st);
-    res6 = strstr(buffer, show topology);
+    res6 = strstr(buffer, show_topology);
 
     // here we make sure the previous result is equal to what we want
-    if(res1 != NULL && strcmp(res1, direct_join) == 0){
-        verify_ip_tcp(buffer, 1);
+    if(res1 != NULL){
+        return 1;
     }
-    else if(res2 != NULL && strcmp(res2, dj) == 0){
-        verify_ip_tcp(buffer, 2);
+    else if(res2 != NULL){
+        return 2;
     }
-    else if(res3 != NULL && strcmp(res3, join) == 0){
-        verify_ip_tcp(buffer, 3);
+    else if(res3 != NULL){
+        return 3;
     }
-    else if(res4 != NULL && strcmp(res4, j) == 0){
-        verify_ip_tcp(buffer, 4);
+    else if(res4 != NULL){
+        return 4;
     }
-    else if(res5 != NULL && strcmp(res5, st) == 0){
-        verify_ip_tcp(buffer, 5);
+    else if(res5 != NULL){
+        return 5;
     }
-    else if(res6 != NULL && strcmp(res6, show topology) == 0){
-        verify_ip_tcp(buffer, 6);
+    else if(res6 != NULL){
+        return 6;
     }
     else{
         printf("Invalid command line\n");
@@ -72,7 +103,7 @@ void verify_commandline(char *buffer){
 
 }
 
-int create_client(char *ip, char *tcp){
+int create_client_tcp(char *ip, char *tcp){
 
     int fd,errcode;
     struct addrinfo hints,*res;
@@ -107,7 +138,7 @@ int create_client(char *ip, char *tcp){
 }
 
 
-int create_server(){// FAZER ATÉ AO LISTEN
+int create_server_tcp(){// FAZER ATÉ AO LISTEN
 
     int fd,errcode;
     ssize_t n;

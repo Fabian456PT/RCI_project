@@ -28,16 +28,17 @@ typedef struct{
     id_struct vzsalv;
     id_struct intr[16];
     int intr_num;
-
 }node;
 
 void read_stdin(char *buffer);
 
-void verify_commandline(char *buffer);
+void verify_ip_tcp_connection(char *buffer, int number, id_struct dj_connect);
 
-int create_client();
+int verify_commandline(char *buffer);
 
-int create_server();
+int create_client_tcp();
+
+int create_server_tcp();
 
 
 #endif
