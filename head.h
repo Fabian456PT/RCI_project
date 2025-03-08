@@ -15,7 +15,7 @@
 #define PORT "58001"  // Porta de comunicação
 #define BUFFER_SIZE 128
 
-int max_fd = 0;
+//int max_fd = 0;
 
 typedef struct{
     char ip[16];
@@ -32,11 +32,11 @@ typedef struct{
 
 void read_stdin(char *buffer);
 
-void verify_ip_tcp_connection(char *buffer, int number, id_struct dj_connect);
+void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node);
 
 int verify_commandline(char *buffer);
 
-int create_client_tcp();
+//int create_client_tcp();
 
 int create_server_tcp();
 

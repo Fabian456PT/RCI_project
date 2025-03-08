@@ -10,12 +10,9 @@ void read_stdin(char *buffer){
 
 }
 
-void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, node *our_node){
+void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node){
 
-    int net;
-    int connect_ip;
-    int connect_tcp;
-
+    int a, b, c, d;
     if(number == 1 || number == 2){// check if the IP and TCP are acceptable
 
         // Check IP address
@@ -23,28 +20,30 @@ void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, n
             a >= 0 && a <= 255 &&
             b >= 0 && b <= 255 &&
             c >= 0 && c <= 255 &&
-            d >= 0 && d <= 255) {
+            d >= 0 && d <= 255){
 
             // Put IP as a string
+            char ip_str[16];
             sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
             printf("Found IP: %s\n", ip_str);
+            strcpy(dj_connect[0].ip, ip_str);
 
             // This moves to the first number after the IP
             buffer += strcspn(buffer, "0123456789"); 
 
             // See what number comes after the IP
-            if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65536){
-                dj_connect[0].ip = connect_ip;
-                dj_connect[0].tcp = connect_tcp;
+            int connect_tcp;
+            if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= (65536 - 1)){
+                char tcp_str[16];
+                sprintf(tcp_str, "%d", connect_tcp);
+                strcpy(dj_connect[0].tcp, tcp_str);
                 printf("Found tcp connection: /%d\n", connect_tcp);
             } 
             else{
                 printf("Invalid tcp connection.\n");
             }
-
             return;
-        }
-        buffer++;  
+        } 
 
     }
     if(number == 3 || number == 4){ // check is the "net" is acceptable
@@ -52,9 +51,9 @@ void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, n
         // Scan for a three-digit number in the string
         while (*buffer){ // reads until '/0'
             // here we only find atmost 3 numbers
-            if (sscanf(str, "%3d", &net) == 1 && net >= 0 && net <= 999){
-                printf("Found net: %3d\n", net);
-                return net;
+            if (sscanf(buffer, "%3d", &net) == 1 && net[0] >= 0 && net[0] <= 999){
+                printf("Found net: %3d\n", net[0]);
+                return;
             }
             buffer++; // Move to the next character
         }
@@ -72,12 +71,12 @@ void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, n
 }
 
 int verify_commandline(char *buffer){
-    char direct_join = "direct join";
-    char dj = "dj";
-    char join = "join";
-    char j = "j";
-    char st = "st";
-    char show_topology = "show topology";
+    char direct_join[] = "direct join";
+    char dj[] = "dj";
+    char join[] = "join";
+    char j[] = "j";
+    char st[] = "st";
+    char show_topology[] = "show topology";
     char *res1, *res2, *res3, *res4, *res5, *res6;
 
     // strstr(main_string, substring), here we are checking if the subsrting is inside the main_string and keep the result in a variable
@@ -120,7 +119,7 @@ int create_client_tcp(char *ip, char *tcp){
     char buffer[128];
 
     fd = socket(AF_INET,SOCK_STREAM,0); //TCP socket
-    if (fd==-1) exit(1); //error
+    if (fd == -1) exit(1); //error
 
     memset(&hints,0,sizeof hints);
     hints.ai_family=AF_INET; //IPv4
@@ -137,12 +136,32 @@ int create_client_tcp(char *ip, char *tcp){
     sprintf(message, "ENTRY %s %s\n", ip, tcp);
     printf("%s\n", message);  
     n = write(fd,message,strlen(message));
-    if(n==-1)/*error*/exit(1);
+    if(n == -1)/*error*/exit(1);
 
-    //select aqui      !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    // Here we use the select() function to wait for the SAFE message
+    ssize_t counter;
+    fd_set fd_commandline;
+    FD_ZERO(&fd_commandline);
+    FD_SET(fd,&fd_commandline);
 
+    int fd_max = fd + 1;
+
+    counter = select(fd_max, &fd_commandline, (fd_set*)NULL,(fd_set*)NULL,(struct timeval*)NULL);
+
+    // If the condition is true it means that there was an error
+    if (counter == -1){
+        printf("There was a error receiving SAFE message!!\n");
+    }
+
+    // We receive the SAFE message
     n = read(fd,buffer,128);
     if(n == -1)/*error*/exit(1);
+
+    write(1,"echo: ",6); write(1,buffer,n);
+
+    freeaddrinfo(res);
+
+    close(fd);
    
     return fd;
 }
@@ -156,18 +175,22 @@ int create_server_tcp(){// FAZER ATÉ AO LISTEN
     char buffer[128];
     int newfd;
 
-    fd=socket(AF_INET,SOCK_STREAM,0); //TCP socket
-    if (fd==-1) exit(1); //error
+    fd = socket(AF_INET,SOCK_STREAM,0); //TCP socket
+    if (fd == -1) exit(1); //error
 
     memset(&hints,0,sizeof hints);
     hints.ai_family=AF_INET; //IPv4
     hints.ai_socktype=SOCK_STREAM; //TCP socket
     hints.ai_flags=AI_PASSIVE;
 
-    errcode=getaddrinfo(NULL,PORT,&hints,&res);
-    if((errcode)!=0)/*error*/exit(1);
+    errcode = getaddrinfo(NULL,PORT,&hints,&res);
+    if((errcode) != 0)/*error*/exit(1);
 
-    LISTEN...
+    n = bind(fd,res->ai_addr,res->ai_addrlen);
+
+    if(n == -1) /*error*/ exit(1);
+
+    if(listen(fd,5) == -1)/*error*/exit(1);
 
     return fd;
 }

@@ -1,7 +1,5 @@
 #include "head.h"
 
-///// ENUNCIADO
-
 ///// IP é o nosso e o TCP é a porta que tou a usar pra ouvir, nossa tb
 
 int main(int argc, char *argv[]){
@@ -44,18 +42,11 @@ int main(int argc, char *argv[]){
 
     node our_node[1];
 
-    our_node[0].id.ip = ip;
-    our_node[0].id.tcp = tcp;
-    our_node[0].vzext.ip = NULL;
-    our_node[0].vzext.tcp = NULL;
-    our_node[0].vzsalv.ip = NULL;
-    our_node[0].vzsalv.tcp = NULL;
-    our_node[0].intr_num = 0;
-
-    for(int i = 0; i < 16; i++){
-        our_node[0].intr[i].ip = NULL;
-        our_node[0].intr[i].tcp = NULL;
-    }  
+    memset(&our_node[0], 0, sizeof(our_node[0])); // initialize every byte of the node structure as zero
+    // initialize some variables in our_node with values 
+    strcpy(our_node[0].id.ip, ip); 
+    strcpy(our_node[0].id.tcp, tcp);
+    our_node[0].intr_num = 0;  
 
     // If this condition is true there was an exception
     if (FD_ISSET(0, &fd_commandline) != 0){
@@ -68,26 +59,26 @@ int main(int argc, char *argv[]){
 
         //here we are going to take the rest information about the command line (ip and tcp, if command line is just st or show topology we just do the command)
 
-        int net; // variable used if the user writes join or j
+        int net[1] = {0}; // variable used if the user writes join or j
         id_struct dj_connect[1]; // variable used to keep the ip and tcp when the user writes direct join or dj
 
         if(command == 1){
-            verify_ip_tcp(buffer, 1, dj_connect);
+            verify_ip_tcp_connection(buffer, 1, dj_connect, net, our_node);
         }
         else if(command == 2){
-            verify_ip_tcp(buffer, 2, dj_connect);
+            verify_ip_tcp_connection(buffer, 2, dj_connect, net, our_node);
         }
         else if(command == 3){
-            net = verify_ip_tcp(buffer, 3);
+            verify_ip_tcp_connection(buffer, 3, dj_connect, net, our_node);
         }
         else if(command == 4){
-            net = verify_ip_tcp(buffer, 4);
+            verify_ip_tcp_connection(buffer, 4, dj_connect, net, our_node);
         }
         else if(command == 5){
-            verify_ip_tcp(buffer, 5, our_node);
+            verify_ip_tcp_connection(buffer, 5, dj_connect, net, our_node);
         }
         else if(command == 6){
-            verify_ip_tcp(buffer, 6, our_node);
+            verify_ip_tcp_connection(buffer, 6, dj_connect, net, our_node);
         }
         else{
             printf("Invalid command line\n");
@@ -96,7 +87,7 @@ int main(int argc, char *argv[]){
 
     //VER CONDIÇOES PARA IP E TCP DE ENTRADA PQ TALVEZ SO SEJA NECESSÁRIO CHARA A FUNÇAO CREATE SERVER
 
-    int fd_client = create_client_tcp(ip, tcp);
+    //int fd_client = create_client_tcp(ip, tcp);
     int fd_server = create_server_tcp("estrutura dos nós op");
 
 
