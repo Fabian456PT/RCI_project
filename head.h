@@ -12,9 +12,6 @@
 #include <string.h>
 #include <stdio.h>
 
-#define PORT "58001"  // Porta de comunicação
-#define BUFFER_SIZE 128
-
 //int max_fd = 0;
 
 typedef struct{
@@ -24,21 +21,49 @@ typedef struct{
 
 typedef struct{
     id_struct id;
+    int our_socket;
     id_struct vzext;
+    int ext_fd;
     id_struct vzsalv;
+    int salv_fd;
     id_struct intr[16];
     int intr_num;
+    int intr_fd[16];
+    int biggest_socket;
+    int udp_server_fd;
+    struct addrinfo *res;
 }node;
+
+// auxiliar funtions
+void initialize_our_node(node *our_node, char *ip, char *tcp);
 
 void read_stdin(char *buffer);
 
-void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node);
+void keep_commandline_values(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node);
 
 int verify_commandline(char *buffer);
 
-//int create_client_tcp();
+void get_message(char *buffer, id_struct *message_ip_tcp);
 
-int create_server_tcp();
+void get_ipandtcp_from_node_list(char *buffer, id_struct *ip_tcp_chosen);
 
+void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *message_ip_tcp, char *buffer_fd);
+
+// events
+int create_client_udp(char *regip, char *regudp, int *net, id_struct *ip_tcp_chosen, node *our_node);
+
+int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_ip_tcp);
+
+int create_server_tcp(char *tcp);
+
+// command lines
+int join(char *buffer,id_struct *dj_connect,int *net,node *our_node, id_struct *ip_tcp_chosen, char *regip, char *regudp);
+
+int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *net, node *our_node, 
+    id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp);
+
+void show_topology(node *our_node);
+
+void leave(node *our_node, int *net);
 
 #endif

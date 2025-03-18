@@ -1,35 +1,51 @@
 #include "head.h"
+#include <asm-generic/socket.h>
+
+
+void initialize_our_node(node *our_node, char *ip, char *tcp){
+
+    memset(&our_node[0], 0, sizeof(our_node[0])); // initialize every byte of the node structure as zero
+    // initialize some variables in our_node with values 
+    strcpy(our_node[0].id.ip, ip); 
+    strcpy(our_node[0].id.tcp, tcp);
+    our_node[0].intr_num = 0; // initial number of inner nodes is 0
+
+    our_node[0].biggest_socket = 0; 
+    our_node[0].our_socket = -1; // variable used when we need to create a server
+    our_node[0].ext_fd = -1; // our outer node socket
+    our_node[0].salv_fd = -1; // our save node socket
+
+}
 
 
 void read_stdin(char *buffer){
     int n = 99;
 
     fgets(buffer, n, stdin);
-    //CHECK IF THIS WORKS
+
     fflush(0);// this fflush makes sure that if the user writes more than 99 characteres the rest goes to the trash
 
 }
 
-void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node){
+// this function keeps in a variable the terms of dj and j command lines
+void keep_commandline_values(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node){
 
     int a, b, c, d;
-    if(number == 1 || number == 2){// check if the IP and TCP are acceptable
+    if(number == 1){// check if the IP and TCP are acceptable
 
-        // Check IP address
+        // Check IP address but first skip all letters and go to the first digit
+        buffer += strcspn(buffer, "0123456789");
         if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
-            a >= 0 && a <= 255 &&
-            b >= 0 && b <= 255 &&
-            c >= 0 && c <= 255 &&
-            d >= 0 && d <= 255){
+            a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+            c >= 0 && c <= 255 && d >= 0 && d <= 255){
 
             // Put IP as a string
             char ip_str[16];
             sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
-            printf("Found IP: %s\n", ip_str);
             strcpy(dj_connect[0].ip, ip_str);
 
-            // This moves to the first number after the IP
-            buffer += strcspn(buffer, "0123456789"); 
+            buffer += strcspn(buffer, " "); // Move to the first space after IP
+            buffer += strspn(buffer, " ");  // Skip spaces
 
             // See what number comes after the IP
             int connect_tcp;
@@ -37,160 +53,255 @@ void verify_ip_tcp_connection(char *buffer, int number, id_struct *dj_connect, i
                 char tcp_str[16];
                 sprintf(tcp_str, "%d", connect_tcp);
                 strcpy(dj_connect[0].tcp, tcp_str);
-                printf("Found tcp connection: /%d\n", connect_tcp);
             } 
             else{
                 printf("Invalid tcp connection.\n");
             }
+
+            printf("ligar1: %s\n", dj_connect->ip);
+            printf("ligar1: %s\n", dj_connect->tcp);
+            
             return;
         } 
 
     }
-    if(number == 3 || number == 4){ // check is the "net" is acceptable
+    if(number == 2){ // check is the "net" is acceptable
 
         // Scan for a three-digit number in the string
         while (*buffer){ // reads until '/0'
             // here we only find atmost 3 numbers
-            if (sscanf(buffer, "%3d", &net) == 1 && net[0] >= 0 && net[0] <= 999){
-                printf("Found net: %3d\n", net[0]);
+            if (sscanf(buffer, "%3d", net) == 1 && net[0] >= 0 && net[0] <= 999){
                 return;
             }
             buffer++; // Move to the next character
         }
         
     }
-    if(number == 5 || number == 6){
-        printf("Vizinho externo: IP: %s  TCP: %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
-        printf("Vizinho salvaguarda: IP: %s  TCP: %s\n\n", our_node[0].vzsalv.ip, our_node[0].vzsalv.tcp);
-
-        for(int i = 0; i < 16; i++){
-            printf("Vizinho externo: IP: %s  TCP: %s\n", our_node[0].intr[i].ip, our_node[0].intr[i].tcp);
-        }
-    }
-
 }
 
 int verify_commandline(char *buffer){
-    char direct_join[] = "direct join";
-    char dj[] = "dj";
-    char join[] = "join";
-    char j[] = "j";
-    char st[] = "st";
-    char show_topology[] = "show topology";
-    char *res1, *res2, *res3, *res4, *res5, *res6;
+    char *commands[] = {
+        "direct join", "dj",           // direct join ou dj           1 & 2
+        "join", "j",                   // join ou j                   3 & 4
+        "st", "show topology",         // st ou show topology         5 & 6
+        "leave", "l",                  // leave ou l                  7 & 8
+        "create", "c",                 // create ou c                 9 & 10
+        "delete", "dl",                // delete ou dl               11 & 12
+        "retrive", "r",                // retrive ou r               13 & 14
+        "show names", "sn",            // show names ou sn           15 & 16
+        "show interest table", "si",   // show interest table ou si  17 & 18
+        "exit", "x"                    // exit ou x                  19 & 20
+    };
 
-    // strstr(main_string, substring), here we are checking if the subsrting is inside the main_string and keep the result in a variable
-    res1 = strstr(buffer, direct_join);
-    res2 = strstr(buffer, dj);
-    res3 = strstr(buffer, join);
-    res4 = strstr(buffer, j);
-    res5 = strstr(buffer, st);
-    res6 = strstr(buffer, show_topology);
+    // Loop para verificar cada comando
+    for (int i = 0; i < 8; i++) {
+        if (strstr(buffer, commands[i]) != NULL) {
+            return i + 1;  // Incrementa 1 para corresponder ao índice correto
+        }
+    }
 
-    // here we make sure the previous result is equal to what we want
-    if(res1 != NULL){
-        return 1;
+    printf("Invalid command line\n");
+    return 0;
+}
+
+void get_message(char *buffer, id_struct *message_ip_tcp){
+
+    int a, b, c, d;
+    char zero[] = "/0";
+
+    //initialize the all as zero just in case we dont have an ENTRY message or SAFE message
+    strcpy(message_ip_tcp[0].ip, zero);
+    strcpy(message_ip_tcp[0].tcp, zero);
+    strcpy(message_ip_tcp[1].ip, zero);
+    strcpy(message_ip_tcp[1].tcp, zero);
+
+    printf("buffer in  get message: %s\n", buffer);
+
+    // Check for "ENTRY" prefix
+    if (strncmp(buffer, "ENTRY", 5) == 0){
+        buffer += 5;
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines
+        
+        // Check IP address
+        buffer += strcspn(buffer, "0123456789");
+        if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+            a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+            c >= 0 && c <= 255 && d >= 0 && d <= 255){
+            
+            char ip_str[16];
+            sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
+            strcpy(message_ip_tcp[0].ip, ip_str);//saving entering ip
+
+            buffer += strcspn(buffer, " ");// Move to the first space after IP
+            buffer += strspn(buffer, " ");// Skip spaces
+
+            int connect_tcp;
+            if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65535){
+                char tcp_str[16];
+                sprintf(tcp_str, "%d", connect_tcp);
+                strcpy(message_ip_tcp[0].tcp, tcp_str);//saving entering port
+            } else {
+                printf("Invalid ENTRY tcp connection.\n");
+            }
+        } else {
+            printf("Invalid ENTRY IP format.\n");
+        }
+        buffer += strcspn(buffer, "\n"); // Move to next line
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines
     }
-    else if(res2 != NULL){
-        return 2;
+    
+    // Check for SAFE
+    if (strncmp(buffer, "SAFE", 4) == 0){
+        buffer += 4;
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines
+    } 
+    else{//if we only have an ENTRY message we return
+        return;
     }
-    else if(res3 != NULL){
-        return 3;
+    
+    // Check IP address
+    buffer += strcspn(buffer, "0123456789");// searching for the first number
+    if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+        a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+        c >= 0 && c <= 255 && d >= 0 && d <= 255){
+        
+        char ip_str[16];
+        sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
+        strcpy(message_ip_tcp[1].ip, ip_str); //saving second ip 
+
+        printf("passou aqui ip: %s\n", ip_str);
+
+        buffer += strcspn(buffer, " ");
+        buffer += strspn(buffer, " ");
+
+        int connect_tcp;
+        if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65535){
+            char tcp_str[16];
+            sprintf(tcp_str, "%d", connect_tcp);
+            strcpy(message_ip_tcp[1].tcp, tcp_str);// saving second port 
+            printf("passou aqui tcp: %s\n", tcp_str);
+        } else {
+            printf("Invalid SAFE tcp connection.\n");
+        }
+    } 
+    else{
+        printf("Invalid SAFE IP format.\n");
     }
-    else if(res4 != NULL){
-        return 4;
+
+    
+    
+    // If ENTRY was present, return its data, otherwise return SAFE
+    return;
+}
+
+void get_ipandtcp_from_node_list(char *buffer, id_struct *ip_tcp_chosen){
+
+    int a, b, c, d;
+    char zero_ip[] = "0.0.0.0";
+
+    // Skip firts line to get the first IP and TCP
+    buffer += strcspn(buffer, "\n");
+    if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+        a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+        c >= 0 && c <= 255 && d >= 0 && d <= 255){
+
+        // Put IP as a string
+        char ip_str[16];
+        sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
+        strcpy(ip_tcp_chosen->ip, ip_str);
+
+        buffer += strcspn(buffer, " "); // Move to the first space after IP
+        buffer += strspn(buffer, " ");  // Skip spaces
+
+        // See what number comes after the IP
+        int connect_tcp;
+        if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= (65536 - 1)){
+            char tcp_str[16];
+            sprintf(tcp_str, "%d", connect_tcp);
+            strcpy(ip_tcp_chosen->tcp, tcp_str);
+        } 
+
+        printf("chosen: %s\n", ip_tcp_chosen->ip);
+        printf("chosen: %s\n", ip_tcp_chosen->tcp);
+    } 
+    else{
+        strcpy(ip_tcp_chosen->ip, zero_ip);
+        printf("There is no node to join you are going to be the first.\n");
     }
-    else if(res5 != NULL){
-        return 5;
-    }
-    else if(res6 != NULL){
-        return 6;
+    return;
+
+}
+
+
+void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *message_ip_tcp, char *buffer_fd){
+
+    int n;
+    // if we dont have an outer node we chose the entering node as our outer node
+    if(strcmp(our_node[0].vzext.ip, "") == 0 || strcmp(our_node[0].vzext.tcp, "") == 0){
+        strcpy(our_node[0].vzext.ip, message_ip_tcp[0].ip);
+        strcpy(our_node[0].vzext.tcp, message_ip_tcp[0].tcp);
+        our_node[0].ext_fd = *newfd;   
+        
+        // Registering the new node as an inner node and its socket value
+        strcpy(our_node[0].intr[our_node[0].intr_num].ip, message_ip_tcp[0].ip);
+        strcpy(our_node[0].intr[our_node[0].intr_num].tcp, message_ip_tcp[0].tcp);
+        our_node[0].intr_fd[our_node[0].intr_num] = *newfd; // keep the new inner socket
+        our_node[0].intr_num++;// increasing the number of inner nodes
+
+        // See which onde is the biggest socket for the select() function
+        if(our_node[0].biggest_socket < *newfd){
+            our_node[0].biggest_socket = *newfd;               
+        }
+
+        // Sending SAFE message (ENTRY our node SAFE our outer node which is the node that tried to connect)
+        char buffer_entry[50];
+        char buffer_safe[50];
+        sprintf(buffer_entry, "ENTRY %s %s\n", our_node[0].id.ip, our_node[0].id.tcp);
+        // sending ENTRY message
+        n = write(*newfd, buffer_entry, 50);
+        if(n == -1){
+            printf("Error sending SAFE message\n");
+            exit(1);
+        }
+
+        sprintf(buffer_entry, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+        // sending SAFE message
+        n = write(*newfd, buffer_entry, 50);
+        if(n == -1){
+            printf("Error sending SAFE message\n");
+            exit(1);
+        }
+
+        n = read(*newfd, buffer_fd, 30);
+        if(n == -1){
+            printf("error in read() function1.\n");
+        }
+        
+        // Get safe message
+        get_message(buffer_fd, message_ip_tcp);
+
+        strcpy(our_node[0].vzsalv.ip, our_node[0].id.ip); 
+        strcpy(our_node[0].vzsalv.tcp, our_node[0].id.tcp); 
     }
     else{
-        printf("Invalid command line\n");
+        // Registering the new node as an inner node and its socket value
+        strcpy(our_node[0].intr[our_node[0].intr_num].ip, message_ip_tcp[0].ip);
+        strcpy(our_node[0].intr[our_node[0].intr_num].tcp, message_ip_tcp[0].tcp);
+        our_node[0].intr_fd[our_node[0].intr_num] = *newfd; // keep the new inner socket
+        our_node[0].intr_num++;// increasing the number of inner nodes
+
+        // See which onde is the biggest socket for the select() function
+        if(our_node[0].biggest_socket < *newfd){
+            our_node[0].biggest_socket = *newfd;               
+        }
+
+        // Sending SAFE message
+        sprintf(buffer_fd, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+        n = write(*newfd, buffer_fd, 30);
+        if(n == -1){
+            printf("Error sending SAFE message\n");
+            exit(1);
+        }
     }
 
-}
-
-int create_client_tcp(char *ip, char *tcp){
-
-    int fd,errcode;
-    struct addrinfo hints,*res;
-    char buffer[128];
-
-    fd = socket(AF_INET,SOCK_STREAM,0); //TCP socket
-    if (fd == -1) exit(1); //error
-
-    memset(&hints,0,sizeof hints);
-    hints.ai_family=AF_INET; //IPv4
-    hints.ai_socktype=SOCK_STREAM; //TCP socket
-
-    errcode = getaddrinfo(ip, tcp, &hints, &res);
-    if(errcode != 0)/*error*/exit(1);
-
-    ssize_t n;
-    n = connect(fd,res->ai_addr,res->ai_addrlen);
-    if(n == -1)/*error*/exit(1);
-
-    char message[50];
-    sprintf(message, "ENTRY %s %s\n", ip, tcp);
-    printf("%s\n", message);  
-    n = write(fd,message,strlen(message));
-    if(n == -1)/*error*/exit(1);
-
-    // Here we use the select() function to wait for the SAFE message
-    ssize_t counter;
-    fd_set fd_commandline;
-    FD_ZERO(&fd_commandline);
-    FD_SET(fd,&fd_commandline);
-
-    int fd_max = fd + 1;
-
-    counter = select(fd_max, &fd_commandline, (fd_set*)NULL,(fd_set*)NULL,(struct timeval*)NULL);
-
-    // If the condition is true it means that there was an error
-    if (counter == -1){
-        printf("There was a error receiving SAFE message!!\n");
-    }
-
-    // We receive the SAFE message
-    n = read(fd,buffer,128);
-    if(n == -1)/*error*/exit(1);
-
-    write(1,"echo: ",6); write(1,buffer,n);
-
-    freeaddrinfo(res);
-
-    close(fd);
-   
-    return fd;
-}
-
-
-int create_server_tcp(){// FAZER ATÉ AO LISTEN
-
-    int fd,errcode;
-    ssize_t n;
-    struct addrinfo hints,*res;
-    char buffer[128];
-    int newfd;
-
-    fd = socket(AF_INET,SOCK_STREAM,0); //TCP socket
-    if (fd == -1) exit(1); //error
-
-    memset(&hints,0,sizeof hints);
-    hints.ai_family=AF_INET; //IPv4
-    hints.ai_socktype=SOCK_STREAM; //TCP socket
-    hints.ai_flags=AI_PASSIVE;
-
-    errcode = getaddrinfo(NULL,PORT,&hints,&res);
-    if((errcode) != 0)/*error*/exit(1);
-
-    n = bind(fd,res->ai_addr,res->ai_addrlen);
-
-    if(n == -1) /*error*/ exit(1);
-
-    if(listen(fd,5) == -1)/*error*/exit(1);
-
-    return fd;
 }
