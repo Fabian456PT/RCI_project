@@ -305,5 +305,3 @@ void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *messa
     }
 
 }
-
-//jigobigo lñe
