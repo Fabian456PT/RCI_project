@@ -66,4 +66,6 @@ void show_topology(node *our_node);
 
 void leave(node *our_node, int *net);
 
+void exit();
+
 #endif

@@ -105,6 +105,8 @@ int main(int argc, char *argv[]){
                 leave(our_node, &net);
             }
 
+            
+
             else{
                 printf("Invalid command line\n");
             }

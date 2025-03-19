@@ -94,7 +94,7 @@ int verify_commandline(char *buffer){
     };
 
     // Loop para verificar cada comando
-    for (int i = 0; i < 8; i++) {
+    for (int i = 0; i < 20; i++) {
         if (strstr(buffer, commands[i]) != NULL) {
             return i + 1;  // Incrementa 1 para corresponder ao índice correto
         }
@@ -305,3 +305,5 @@ void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *messa
     }
 
 }
+
+//olá
