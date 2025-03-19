@@ -213,5 +213,3 @@ int create_server_tcp(char *tcp){
 
     return fd;
 }
-
-///jajajajaj
