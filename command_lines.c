@@ -100,4 +100,3 @@ void leave(node *our_node, int *net){
     
 }
 
-//////////efdczgrsfvxgsv
