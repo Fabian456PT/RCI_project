@@ -1,4 +1,5 @@
 #include "head.h"
+#include <string.h>
 #include <unistd.h>
 
 int join(char *buffer, id_struct *dj_connect, int *net, node *our_node, id_struct *ip_tcp_chosen, char *regip, char *regudp){
@@ -98,5 +99,34 @@ void leave(node *our_node, int *net){
         close(our_node[0].intr_fd[i]);
     }
     
+}
+
+void create(node *our_node, char *buffer, int cache) {
+    // Check if we have space in the cache
+    if (our_node->objects_num >= cache) {  
+        printf("Error: Cache is full! Cannot store more objects.\n");
+        return;
+    }
+
+    // Skip the "create" command and leading spaces
+    buffer += strcspn(buffer, " "); // skip for the first space
+    buffer += strspn(buffer, " ");  // skip all spaces
+
+    int name_len = strcspn(buffer, " \n"); // Get the length of the object name
+
+    // Check if the name is too long
+    if (name_len > 100) {
+        printf("Error: Object name is too long!\n");
+        return;
+    }
+
+    // Store the object name in the node structure
+    strncpy(our_node->object[our_node->objects_num], buffer, name_len);
+    our_node->object[our_node->objects_num][name_len] = '\0'; // Make sure the string is null-terminated
+
+    // Increment the counter for the stored objects
+    our_node->objects_num++;
+
+    printf("Object created: %s\n", our_node->object[our_node->objects_num - 1]);
 }
 

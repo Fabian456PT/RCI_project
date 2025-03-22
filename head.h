@@ -32,6 +32,8 @@ typedef struct{
     int biggest_socket;
     int udp_server_fd;
     struct addrinfo *res;
+    int objects_num;
+    char object[][101];
 }node;
 
 // auxiliar funtions
@@ -63,6 +65,8 @@ int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *n
     id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp);
 
 void show_topology(node *our_node);
+
+void create(node *our_node, char *buffer, int cache);
 
 void leave(node *our_node, int *net);
 

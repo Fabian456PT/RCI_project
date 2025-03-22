@@ -1,4 +1,6 @@
 #include "head.h"
+#include <complex.h>
+#include <stdlib.h>
 
 char buffer_fd[30];
 
@@ -100,13 +102,17 @@ int main(int argc, char *argv[]){
             else if(command == 5 || command == 6){
                 show_topology(our_node);
             }
+            else if (command == 9 || command == 10) {
+                create(our_node, buffer, cache);
+            }
             // leave
             else if (command == 7 || command == 8){
                 leave(our_node, &net);
             }
-
-            
-
+            // exit
+            else if (command == 19 || command == 20) {
+                exit(0);
+            }
             else{
                 printf("Invalid command line\n");
             }
