@@ -79,16 +79,6 @@ void keep_commandline_values(char *buffer, int number, id_struct *dj_connect, in
         }
         
     }
-    /*if (number == 3) { // check if "name" is acceptable
-
-        buffer += strspn(buffer, " ");
-        
-        size_t max_len = strspn(buffer, " \n");
-        if (max_len > 100) {
-            printf("To big for me ;(\n");
-            return;
-        }
-    }*/
     
 }
 
