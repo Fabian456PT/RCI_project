@@ -11,7 +11,7 @@
 #include <netdb.h>
 #include <string.h>
 #include <stdio.h>
-
+#include <ctype.h>
 //int max_fd = 0;
 
 typedef struct{
@@ -67,6 +67,8 @@ int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *n
 void show_topology(node *our_node);
 
 void create(node *our_node, char *buffer, int cache);
+
+void delete_obj(node *our_node, char *buffer);
 
 void leave(node *our_node, int *net);
 
