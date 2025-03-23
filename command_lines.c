@@ -1,4 +1,5 @@
 #include "head.h"
+#include <stdio.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -130,3 +131,25 @@ void create(node *our_node, char *buffer, int cache) {
     printf("Object created: %s\n", our_node->object[our_node->objects_num - 1]);
 }
 
+void delete_obj(node *our_node, char *buffer){
+    
+    buffer += strcspn(buffer, " "); // skip for the first space
+    buffer += strspn(buffer, " ");  // skip all spaces
+    //printf("encontrei-te boi %s\n", buffer);
+    for (int i=0; i<our_node[0].objects_num; i++) {
+        if (strncmp(buffer, our_node[0].object[i], strlen(buffer)) == 0) { // compare the 2 strings 
+
+            for (int j = i; j < our_node[0].objects_num - 1 ; j++) {
+                strncpy(our_node[0].object[j], our_node[0].object[j+1], 101); //shift the objects to the left, in the array
+            }
+
+            // decrease the number of the objects registed in our node
+            our_node[0].objects_num --;
+
+            printf("object deleted %s\n", buffer);
+            return;
+        }
+        
+    }
+    printf("Object not found: %s\n", buffer);
+}
