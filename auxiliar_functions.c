@@ -96,20 +96,39 @@ int verify_commandline(char *buffer){
     char *commands[] = {
         "direct join", "dj",           // direct join ou dj           1 & 2
         "join", "j",                   // join ou j                   3 & 4
-        "st", "show topology",         // st ou show topology         5 & 6
+        "show topology", "st",         // st ou show topology         5 & 6
         "leave", "l",                  // leave ou l                  7 & 8
         "create", "c",                 // create ou c                 9 & 10
-        "delete", "dl",                // delete ou dl               11 & 12
-        "retrive", "r",                // retrive ou r               13 & 14
-        "show names", "sn",            // show names ou sn           15 & 16
-        "show interest table", "si",   // show interest table ou si  17 & 18
-        "exit", "x"                    // exit ou x                  19 & 20
+        "delete", "dl",                // delete ou dl                11 & 12
+        "retrive", "r",                // retrive ou r                13 & 14
+        "show names", "sn",            // show names ou sn            15 & 16
+        "show interest table", "si",   // show interest table ou si   17 & 18
+        "exit", "x"                    // exit ou x                   19 & 20
     };
 
-    // Loop para verificar cada comando
-    for (int i = 0; i < 20; i++) {
-        if (strstr(buffer, commands[i]) != NULL) {
-            return i + 1;  // Incrementa 1 para corresponder ao índice correto
+    // Trim leading and trailing spaces in the input buffer
+    while (isspace((unsigned char)*buffer)) buffer++; // verifica se o primeiro caractere em buffer é um espaço em branco
+    char *end = buffer + strlen(buffer) - 1;
+    while (end > buffer && isspace((unsigned char)*end)) end--; // trim trailing spaces
+    *(end + 1) = '\0'; // null-terminate after trimming
+
+    // Check for long commands first (e.g., "direct join", "join", etc.)
+    for (int i = 0; i < 20; i += 2) {
+        // Check if the command matches, and ensure no extra characters are present
+        if (strncmp(buffer, commands[i], strlen(commands[i])) == 0) {
+            if (buffer[strlen(commands[i])] == '\0' || buffer[strlen(commands[i])] == ' ') {
+                return i + 1;  // Return corresponding command number
+            }
+        }
+    }
+
+    // Check for short commands next (e.g., "dj", "j", etc.)
+    for (int i = 1; i < 20; i += 2) {
+        // Check if the command matches, and ensure no extra characters are present
+        if (strncmp(buffer, commands[i], strlen(commands[i])) == 0) {
+            if (buffer[strlen(commands[i])] == '\0' || buffer[strlen(commands[i])] == ' ') {
+                return i + 1;  // Return corresponding command number
+            }
         }
     }
 
