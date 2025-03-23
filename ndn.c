@@ -102,8 +102,13 @@ int main(int argc, char *argv[]){
             else if(command == 5 || command == 6){
                 show_topology(our_node);
             }
+            //create
             else if (command == 9 || command == 10) {
                 create(our_node, buffer, cache);
+            }
+            //delete
+            else if (command == 11 || command == 12) {
+                delete_obj(our_node, buffer);
             }
             // leave
             else if (command == 7 || command == 8){
