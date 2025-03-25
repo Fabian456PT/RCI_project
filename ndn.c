@@ -102,6 +102,10 @@ int main(int argc, char *argv[]){
             else if(command == 5 || command == 6){
                 show_topology(our_node);
             }
+            // show names 
+            else if (command == 15|| command == 16) {
+                show_names(our_node);
+            }
             //create
             else if (command == 9 || command == 10) {
                 create(our_node, buffer, cache);
