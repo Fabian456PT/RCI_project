@@ -32,17 +32,47 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
     if(strcmp(our_node[0].id.ip, our_node[0].vzsalv.ip) != 0 || strcmp(our_node[0].id.tcp, our_node[0].vzsalv.tcp) != 0){
         strcpy(dj_connect->ip, our_node[0].vzsalv.ip);
         strcpy(dj_connect->tcp, our_node[0].vzsalv.tcp); 
+        // connect to our safe node
         new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
         our_node[0].ext_fd = new_ext_fd;
         FD_SET(new_ext_fd, &fd_buffer);
+         // See which onde is the biggest socket for the select() function
+         if(our_node[0].biggest_socket < new_ext_fd){
+            our_node[0].biggest_socket = new_ext_fd;               
+        }
 
-        // mandar mensagem de salvaguarda a todos os filhos internos
+        char buffer[50];
+        sprintf(buffer, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+        // sending a SAFE message to all inner nodes
+        for(int i = 0; i < 16; i++){
+            int n = write(our_node[0].intr_fd[i],buffer,strlen(buffer));
+            if(n == -1)/*error*/exit(1);
+        }
     }
-    else{
-        
+    else{// if we are at the top we need to put one of our inner nodes as our outer node and give him an ENTRY message and a SAFE message to all inner nodes
+        if(our_node[0].intr_num >= 1){
+            // putting one of our inner nodes as our outer node
+            strcpy(our_node[0].vzext.ip, our_node[0].intr[0].ip);
+            strcpy(our_node[0].vzext.tcp, our_node[0].intr[0].tcp);
+            // Sending an ENTRY message
+            new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
+            our_node[0].ext_fd = new_ext_fd;
+            FD_SET(new_ext_fd, &fd_buffer);
+            // See which onde is the biggest socket for the select() function
+            if(our_node[0].biggest_socket < new_ext_fd){
+                our_node[0].biggest_socket = new_ext_fd;               
+            }
+
+            // sending an SAFE message to all inner nodes
+            char buffer[50];
+            sprintf(buffer, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+            // sending a SAFE message to all inner nodes
+            for(int i = 0; i < 16; i++){
+                int n = write(our_node[0].intr_fd[i],buffer,strlen(buffer));
+                if(n == -1)/*error*/exit(1);
+            }
+        }        
     }
-
-
 }
 
 
@@ -312,9 +342,9 @@ void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *messa
             exit(1);
         }
 
-        sprintf(buffer_entry, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
+        sprintf(buffer_safe, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
         // sending SAFE message
-        n = write(*newfd, buffer_entry, 50);
+        n = write(*newfd, buffer_safe, 50);
         if(n == -1){
             printf("Error sending SAFE message\n");
             exit(1);

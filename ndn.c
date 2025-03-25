@@ -48,9 +48,17 @@ int main(int argc, char *argv[]){
 
         if(FD_ISSET(our_node[0].ext_fd, &fd_read) != 0){
             char buffer[50];
+            // if our outer node left
             if(read(our_node[0].ext_fd, buffer, 50) == 0){
                 FD_CLR(our_node[0].ext_fd, &fd_read); 
                 outer_node_left(our_node, fd_buffer);
+            }
+            else{ // if our outer node did not leave then it must be a new SAFE message
+                read(our_node[0].ext_fd, buffer, 50);
+                get_message(buffer, message_ip_tcp);
+                // update our safe node
+                strcpy(our_node[0].vzsalv.ip, message_ip_tcp[1].ip);
+                strcpy(our_node[0].vzsalv.tcp, message_ip_tcp[1].tcp);
             }
         }
 
