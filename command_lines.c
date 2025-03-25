@@ -99,7 +99,7 @@ void leave(node *our_node, int *net){
     for (int i=0; i < our_node->intr_num; i++) {
         close(our_node[0].intr_fd[i]);
     }
-    
+    // falta mandar protocolo de saida
 }
 
 void create(node *our_node, char *buffer, int cache) {
@@ -139,8 +139,8 @@ void delete_obj(node *our_node, char *buffer){
     for (int i=0; i<our_node[0].objects_num; i++) {
         if (strncmp(buffer, our_node[0].object[i], strlen(buffer)) == 0) { // compare the 2 strings 
 
-            for (int j = i; j < our_node[0].objects_num - 1 ; j++) {
-                strncpy(our_node[0].object[j], our_node[0].object[j+1], 101); //shift the objects to the left, in the array
+            for (int j = i+1; j < our_node[0].objects_num; j++) {
+                strncpy(our_node[0].object[i], our_node[0].object[j], 101); //shift the objects to the left, in the array
             }
 
             // decrease the number of the objects registed in our node
@@ -152,4 +152,20 @@ void delete_obj(node *our_node, char *buffer){
         
     }
     printf("Object not found: %s\n", buffer);
+}
+
+void show_names(node *our_node){
+    
+    printf("saved objects in this node:\n");
+    
+    for (int i=0; i<our_node[0].objects_num; i++) {
+        printf("%s\n", our_node[0].object[i]);
+    }
+}    
+
+void retrive(node *our_node, char *buffer){
+    buffer += strcspn(buffer, " "); // skip for the first space
+    buffer += strspn(buffer, " ");  // skip all spaces
+
+    
 }
