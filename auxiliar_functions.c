@@ -1,8 +1,4 @@
 #include "head.h"
-#include <asm-generic/socket.h>
-#include <stddef.h>
-#include <string.h>
-
 
 void initialize_our_node(node *our_node, char *ip, char *tcp){
 
@@ -44,7 +40,7 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
         char buffer[50];
         sprintf(buffer, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
         // sending a SAFE message to all inner nodes
-        for(int i = 0; i < 16; i++){
+        for(int i = 0; i < our_node[0].intr_num; i++){
             int n = write(our_node[0].intr_fd[i],buffer,strlen(buffer));
             if(n == -1)/*error*/exit(1);
         }
@@ -54,6 +50,11 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
             // putting one of our inner nodes as our outer node
             strcpy(our_node[0].vzext.ip, our_node[0].intr[0].ip);
             strcpy(our_node[0].vzext.tcp, our_node[0].intr[0].tcp);
+
+            // reorganize inner nodes
+            reorganize_inner_nodes(our_node, 0);
+            our_node[0].intr_num--; // update number of inner nodes
+            
             // Sending an ENTRY message
             new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
             our_node[0].ext_fd = new_ext_fd;
@@ -63,16 +64,43 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
                 our_node[0].biggest_socket = new_ext_fd;               
             }
 
-            // sending an SAFE message to all inner nodes
             char buffer[50];
             sprintf(buffer, "SAFE %s %s\n", our_node[0].vzext.ip, our_node[0].vzext.tcp);
             // sending a SAFE message to all inner nodes
-            for(int i = 0; i < 16; i++){
+            for(int i = 0; i < our_node[0].intr_num; i++){
                 int n = write(our_node[0].intr_fd[i],buffer,strlen(buffer));
                 if(n == -1)/*error*/exit(1);
             }
         }        
     }
+}
+
+
+void one_inner_node_left(node *our_node, int i){
+
+    // Cleannig all data about the inner node that left
+    memset(&our_node[0].intr_fd[i], 0, sizeof(our_node[0].intr_fd[i])); 
+    memset(&our_node[0].intr[i], 0, sizeof(our_node[0].intr[i]));
+
+    reorganize_inner_nodes(our_node, i);
+
+    our_node[0].intr_num--;
+
+}
+
+
+void reorganize_inner_nodes(node *our_node, int i){
+
+    // if the node that got out was not the last one
+    if(i != (our_node[0].intr_num - 1)){
+        // put the last inner node in the position of the one that left
+        strcpy(our_node[0].intr[i].ip, our_node[0].intr[our_node[0].intr_num - 1].ip);
+        strcpy(our_node[0].intr[i].ip, our_node[0].intr[our_node[0].intr_num - 1].ip);
+    }
+    else{
+        return;
+    }    
+
 }
 
 

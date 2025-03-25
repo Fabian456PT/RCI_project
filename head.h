@@ -1,6 +1,10 @@
 #ifndef head
 #define head
 
+#include <asm-generic/socket.h>
+#include <stddef.h>
+#include <string.h>
+
 #include <unistd.h>
 #include <stdlib.h>
 #include <sys/types.h>
@@ -40,6 +44,10 @@ typedef struct{
 void initialize_our_node(node *our_node, char *ip, char *tcp);
 
 void outer_node_left(node *our_node, fd_set fd_buffer);
+
+void one_inner_node_left(node *our_node, int i);
+
+void reorganize_inner_nodes(node *our_node, int i);
 
 void read_stdin(char *buffer);
 

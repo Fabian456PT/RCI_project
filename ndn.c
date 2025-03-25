@@ -53,6 +53,7 @@ int main(int argc, char *argv[]){
                 FD_CLR(our_node[0].ext_fd, &fd_read); 
                 outer_node_left(our_node, fd_buffer);
             }
+            // ainda falta meter aqui a situação dos objetos!!!!!!!!!!!!!!! TODO
             else{ // if our outer node did not leave then it must be a new SAFE message
                 read(our_node[0].ext_fd, buffer, 50);
                 get_message(buffer, message_ip_tcp);
@@ -61,7 +62,18 @@ int main(int argc, char *argv[]){
                 strcpy(our_node[0].vzsalv.tcp, message_ip_tcp[1].tcp);
             }
         }
+        // Checking if any of our inner nodes left or objects moment
+        for(int i = 0; i < our_node[0].intr_num; i++){
+            if(FD_ISSET(our_node[0].intr_fd[i], &fd_read) != 0){
+                char buffer[50];
+                if(read(our_node[0].intr_fd[i], buffer, 50) == 0){
+                    one_inner_node_left(our_node, i);
+                }
+            }
+            else{
 
+            }
+        }
         // If this condition is true there is something to read (someone is trying to connect)
         if (FD_ISSET(our_node[0].our_socket, &fd_read) != 0){
 
