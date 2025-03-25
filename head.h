@@ -39,6 +39,8 @@ typedef struct{
 // auxiliar funtions
 void initialize_our_node(node *our_node, char *ip, char *tcp);
 
+void outer_node_left(node *our_node, fd_set fd_buffer);
+
 void read_stdin(char *buffer);
 
 void keep_commandline_values(char *buffer, int number, id_struct *dj_connect, int *net, node *our_node);
@@ -62,7 +64,7 @@ int create_server_tcp(char *tcp);
 int join(char *buffer,id_struct *dj_connect,int *net,node *our_node, id_struct *ip_tcp_chosen, char *regip, char *regudp);
 
 int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *net, node *our_node, 
-    id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp);
+    id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp, fd_set fd_buffer);
 
 void show_topology(node *our_node);
 

@@ -20,6 +20,32 @@ void initialize_our_node(node *our_node, char *ip, char *tcp){
 }
 
 
+void outer_node_left(node *our_node, fd_set fd_buffer){
+    int new_ext_fd; // used if we are not the top node
+    id_struct message_ip_tcp[2];
+    id_struct dj_connect[1]; // variable used to send a ENTRY message 
+
+    memset(&our_node[0].vzext, 0, sizeof(our_node[0].vzext)); // put vzext field as zero
+    our_node[0].ext_fd = -1; // our outer node socket is now -1
+
+    // If we are not at the top we just try to connect to our save node
+    if(strcmp(our_node[0].id.ip, our_node[0].vzsalv.ip) != 0 || strcmp(our_node[0].id.tcp, our_node[0].vzsalv.tcp) != 0){
+        strcpy(dj_connect->ip, our_node[0].vzsalv.ip);
+        strcpy(dj_connect->tcp, our_node[0].vzsalv.tcp); 
+        new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
+        our_node[0].ext_fd = new_ext_fd;
+        FD_SET(new_ext_fd, &fd_buffer);
+
+        // mandar mensagem de salvaguarda a todos os filhos internos
+    }
+    else{
+        
+    }
+
+
+}
+
+
 void read_stdin(char *buffer){
     int n = 99;
 
@@ -168,7 +194,7 @@ void get_message(char *buffer, id_struct *message_ip_tcp){
         } else {
             printf("Invalid ENTRY IP format.\n");
         }
-        buffer += strcspn(buffer, "\n"); // Move to next line
+        //buffer += strcspn(buffer, "\n"); // Move to next line !!!!!!!!!!! ver se funciona sem isto
         buffer += strspn(buffer, " \n"); // Skip spaces and newlines
     }
     

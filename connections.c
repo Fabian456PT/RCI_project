@@ -95,7 +95,7 @@ int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_
         printf("There was a error receiving SAFE message!!\n");
     }
 
-    // We receive the SAFE message
+    // We receive a message from the node we tried to connect
     n = read(fd,buffer,500);
     if(n == -1)/*error*/exit(1);
 

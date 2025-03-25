@@ -2,7 +2,7 @@
 #include <complex.h>
 #include <stdlib.h>
 
-char buffer_fd[30];
+char buffer_fd[50];
 
 ///// IP é o nosso e o TCP é a porta que tou a usar pra ouvir, nossa tb
 
@@ -46,7 +46,15 @@ int main(int argc, char *argv[]){
             printf("There was a error in select() function.\n");
         }
 
-        // If this condition is true there is something to read
+        if(FD_ISSET(our_node[0].ext_fd, &fd_read) != 0){
+            char buffer[50];
+            if(read(our_node[0].ext_fd, buffer, 50) == 0){
+                FD_CLR(our_node[0].ext_fd, &fd_read); 
+                outer_node_left(our_node, fd_buffer);
+            }
+        }
+
+        // If this condition is true there is something to read (someone is trying to connect)
         if (FD_ISSET(our_node[0].our_socket, &fd_read) != 0){
 
             printf("Someone is trying to connect\n");
@@ -95,7 +103,7 @@ int main(int argc, char *argv[]){
             }
             // if the command line is direct join or it was join, we enter here
             if(command == 1 || command == 2 || go_direct_join == 1){
-                int our_socket = direct_join(&go_direct_join, buffer, dj_connect, &net, our_node, ip_tcp_chosen, message_ip_tcp, tcp);   
+                int our_socket = direct_join(&go_direct_join, buffer, dj_connect, &net, our_node, ip_tcp_chosen, message_ip_tcp, tcp, fd_buffer);   
                 FD_SET(our_socket, &fd_buffer);              
             }
             // show topology
