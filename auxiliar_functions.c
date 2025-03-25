@@ -55,7 +55,9 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
             reorganize_inner_nodes(our_node, 0);
             our_node[0].intr_num--; // update number of inner nodes
             
-            // Sending an ENTRY message
+            // Sending an ENTRY message to our new outer node
+            strcpy(dj_connect->ip, our_node[0].vzext.ip);
+            strcpy(dj_connect->tcp, our_node[0].vzext.tcp);
             new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
             our_node[0].ext_fd = new_ext_fd;
             FD_SET(new_ext_fd, &fd_buffer);
@@ -95,7 +97,7 @@ void reorganize_inner_nodes(node *our_node, int i){
     if(i != (our_node[0].intr_num - 1)){
         // put the last inner node in the position of the one that left
         strcpy(our_node[0].intr[i].ip, our_node[0].intr[our_node[0].intr_num - 1].ip);
-        strcpy(our_node[0].intr[i].ip, our_node[0].intr[our_node[0].intr_num - 1].ip);
+        strcpy(our_node[0].intr[i].tcp, our_node[0].intr[our_node[0].intr_num - 1].tcp);
     }
     else{
         return;

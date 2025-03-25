@@ -66,12 +66,13 @@ int main(int argc, char *argv[]){
         for(int i = 0; i < our_node[0].intr_num; i++){
             if(FD_ISSET(our_node[0].intr_fd[i], &fd_read) != 0){
                 char buffer[50];
+                // if we read "0" from one of our inner nodes socket that means that it left
                 if(read(our_node[0].intr_fd[i], buffer, 50) == 0){
                     one_inner_node_left(our_node, i);
                 }
             }
             else{
-
+                // TODO situação dos objetos!!!!!!!!
             }
         }
         // If this condition is true there is something to read (someone is trying to connect)
