@@ -55,7 +55,6 @@ int main(int argc, char *argv[]){
                 outer_node_left(our_node, fd_buffer, name);
             }
             else{ 
-                read(our_node[0].ext_fd, buffer, 50);
                 get_message(buffer, message_ip_tcp, name);
                 // in case we receive a SAFE message
                 if(strcmp(message_ip_tcp[1].ip, "\0") != 0){
@@ -63,6 +62,7 @@ int main(int argc, char *argv[]){
                     strcpy(our_node[0].vzsalv.ip, message_ip_tcp[1].ip);
                     strcpy(our_node[0].vzsalv.tcp, message_ip_tcp[1].tcp);
                 }
+                // sending OBJECT message to retreive
                 else{
                     name[0].flag = -1; // just making sure that is the outer node that is receiving something to read, we say that putting "flag" as "-1"
                     retrive(our_node, NULL, cache, name);
