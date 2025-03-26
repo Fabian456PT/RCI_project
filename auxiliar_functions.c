@@ -325,7 +325,7 @@ void get_message(char *buffer, id_struct *message_ip_tcp, message_type *name){
         }
 
         // Store the object in name variable
-        //strncpy(name, buffer, name_len);
+        strncpy(name[0].name, buffer, name_len);
     }
 
     // Check for "NOOBJECT"
@@ -343,7 +343,7 @@ void get_message(char *buffer, id_struct *message_ip_tcp, message_type *name){
         }
 
         // Store the object in name variable
-        //strncpy(name, buffer, name_len);
+        strncpy(name[0].name, buffer, name_len);
     }
 
     
