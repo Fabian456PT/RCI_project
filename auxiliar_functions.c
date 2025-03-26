@@ -16,7 +16,7 @@ void initialize_our_node(node *our_node, char *ip, char *tcp){
 }
 
 
-void outer_node_left(node *our_node, fd_set fd_buffer){
+void outer_node_left(node *our_node, fd_set fd_buffer, message_type *name){
     int new_ext_fd; // used if we are not the top node
     id_struct message_ip_tcp[2];
     id_struct dj_connect[1]; // variable used to send a ENTRY message 
@@ -29,7 +29,7 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
         strcpy(dj_connect->ip, our_node[0].vzsalv.ip);
         strcpy(dj_connect->tcp, our_node[0].vzsalv.tcp); 
         // connect to our safe node
-        new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
+        new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp, name);
         our_node[0].ext_fd = new_ext_fd;
         FD_SET(new_ext_fd, &fd_buffer);
          // See which onde is the biggest socket for the select() function
@@ -58,7 +58,7 @@ void outer_node_left(node *our_node, fd_set fd_buffer){
             // Sending an ENTRY message to our new outer node
             strcpy(dj_connect->ip, our_node[0].vzext.ip);
             strcpy(dj_connect->tcp, our_node[0].vzext.tcp);
-            new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
+            new_ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp, name);
             our_node[0].ext_fd = new_ext_fd;
             FD_SET(new_ext_fd, &fd_buffer);
             // See which onde is the biggest socket for the select() function
@@ -212,10 +212,10 @@ int verify_commandline(char *buffer){
     return 0;
 }
 
-void get_message(char *buffer, id_struct *message_ip_tcp){
+void get_message(char *buffer, id_struct *message_ip_tcp, message_type *name){
 
     int a, b, c, d;
-    char zero[] = "/0";
+    char zero[] = "\0";
 
     //initialize the all as zero just in case we dont have an ENTRY message or SAFE message
     strcpy(message_ip_tcp[0].ip, zero);
@@ -225,7 +225,7 @@ void get_message(char *buffer, id_struct *message_ip_tcp){
 
     printf("buffer in  get message: %s\n", buffer);
 
-    // Check for "ENTRY" prefix
+    // Check for "ENTRY" 
     if (strncmp(buffer, "ENTRY", 5) == 0){
         buffer += 5;
         buffer += strspn(buffer, " \n"); // Skip spaces and newlines
@@ -251,7 +251,7 @@ void get_message(char *buffer, id_struct *message_ip_tcp){
             } else {
                 printf("Invalid ENTRY tcp connection.\n");
             }
-        } else {
+        } else{
             printf("Invalid ENTRY IP format.\n");
         }
         //buffer += strcspn(buffer, "\n"); // Move to next line !!!!!!!!!!! ver se funciona sem isto
@@ -262,43 +262,91 @@ void get_message(char *buffer, id_struct *message_ip_tcp){
     if (strncmp(buffer, "SAFE", 4) == 0){
         buffer += 4;
         buffer += strspn(buffer, " \n"); // Skip spaces and newlines
-    } 
-    else{//if we only have an ENTRY message we return
-        return;
-    }
-    
-    // Check IP address
-    buffer += strcspn(buffer, "0123456789");// searching for the first number
-    if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
-        a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
-        c >= 0 && c <= 255 && d >= 0 && d <= 255){
-        
-        char ip_str[16];
-        sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
-        strcpy(message_ip_tcp[1].ip, ip_str); //saving second ip 
 
-        printf("passou aqui ip: %s\n", ip_str);
+        // Check IP address
+        buffer += strcspn(buffer, "0123456789");// searching for the first number
+        if (sscanf(buffer, "%d.%d.%d.%d", &a, &b, &c, &d) == 4 &&
+            a >= 0 && a <= 255 && b >= 0 && b <= 255 &&
+            c >= 0 && c <= 255 && d >= 0 && d <= 255){
+            
+            char ip_str[16];
+            sprintf(ip_str, "%d.%d.%d.%d", a, b, c, d);
+            strcpy(message_ip_tcp[1].ip, ip_str); //saving second ip 
 
-        buffer += strcspn(buffer, " ");
-        buffer += strspn(buffer, " ");
+            printf("passou aqui ip: %s\n", ip_str);
 
-        int connect_tcp;
-        if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65535){
-            char tcp_str[16];
-            sprintf(tcp_str, "%d", connect_tcp);
-            strcpy(message_ip_tcp[1].tcp, tcp_str);// saving second port 
-            printf("passou aqui tcp: %s\n", tcp_str);
-        } else {
-            printf("Invalid SAFE tcp connection.\n");
+            buffer += strcspn(buffer, " ");
+            buffer += strspn(buffer, " ");
+
+            int connect_tcp;
+            if (sscanf(buffer, "%d", &connect_tcp) == 1 && connect_tcp > 0 && connect_tcp <= 65535){
+                char tcp_str[16];
+                sprintf(tcp_str, "%d", connect_tcp);
+                strcpy(message_ip_tcp[1].tcp, tcp_str);// saving second port 
+            } else {
+                printf("Invalid SAFE tcp connection.\n");
+            }
+        } 
+        else{
+            printf("Invalid SAFE IP format.\n");
         }
-    } 
-    else{
-        printf("Invalid SAFE IP format.\n");
+    }      
+
+    // Check for "OBJECT"
+    if(strncmp(buffer, "OBJECT", 6) == 0){
+        strcpy(name[0].type, "OBJECT");
+        buffer += 6;
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines 
+        
+        int name_len = strcspn(buffer, " \n"); // Get the length of the object name
+
+        // Check if the name is too long
+        if (name_len > 100) {
+            printf("Error: Object name is too long!\n");
+            return;
+        }
+
+        // Store the object in name variable
+        strncpy(name[0].name, buffer, name_len);
+    }
+
+    // Check for "INTEREST"
+    if(strncmp(buffer, "INTEREST", 8) == 0){
+        strcpy(name[0].type, "INTEREST");
+        buffer += 8;
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines 
+        
+        int name_len = strcspn(buffer, " \n"); // Get the length of the object name
+
+        // Check if the name is too long
+        if (name_len > 100) {
+            printf("Error: Object name is too long!\n");
+            return;
+        }
+
+        // Store the object in name variable
+        //strncpy(name, buffer, name_len);
+    }
+
+    // Check for "NOOBJECT"
+    if(strncmp(buffer, "NOOBJECT", 8) == 0){
+        strcpy(name[0].type, "NOOBJECT");
+        buffer += 8;
+        buffer += strspn(buffer, " \n"); // Skip spaces and newlines 
+        
+        int name_len = strcspn(buffer, " \n"); // Get the length of the object name
+
+        // Check if the name is too long
+        if (name_len > 100) {
+            printf("Error: Object name is too long!\n");
+            return;
+        }
+
+        // Store the object in name variable
+        //strncpy(name, buffer, name_len);
     }
 
     
-    
-    // If ENTRY was present, return its data, otherwise return SAFE
     return;
 }
 
@@ -341,7 +389,7 @@ void get_ipandtcp_from_node_list(char *buffer, id_struct *ip_tcp_chosen){
 }
 
 
-void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *message_ip_tcp, char *buffer_fd){
+void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *message_ip_tcp, char *buffer_fd, message_type *name){
 
     int n;
     // if we dont have an outer node we chose the entering node as our outer node
@@ -386,7 +434,7 @@ void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *messa
         }
         
         // Get safe message
-        get_message(buffer_fd, message_ip_tcp);
+        get_message(buffer_fd, message_ip_tcp, name);
 
         strcpy(our_node[0].vzsalv.ip, our_node[0].id.ip); 
         strcpy(our_node[0].vzsalv.tcp, our_node[0].id.tcp); 

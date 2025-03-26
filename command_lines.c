@@ -20,7 +20,7 @@ int join(char *buffer, id_struct *dj_connect, int *net, node *our_node, id_struc
 
 
 int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *net, node *our_node, 
-                id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp, fd_set fd_buffer){
+                id_struct *ip_tcp_chosen, id_struct *message_ip_tcp, char *tcp, fd_set fd_buffer, message_type *name){
 
     int our_socket;
     if(*go_direct_join == 0){ // if we did not write join first we just need to connect to someone we chose, so we are going to use dj_connect variable
@@ -33,12 +33,12 @@ int direct_join(int *go_direct_join, char *buffer, id_struct *dj_connect, int *n
     // check if when writing dj we did not write 0.0.0.0 or when we wrote join we did not joinned an empty net
     if(strcmp(dj_connect[0].ip, zero_ip) != 0 && strcmp(ip_tcp_chosen->ip, zero_ip) != 0){ 
         if(*go_direct_join == 0){ // if we did not wrote join we send dj_connect variable to connect to someone we chose
-          int ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp);
+          int ext_fd = create_client_tcp(our_node, dj_connect, message_ip_tcp, name);
           our_node[0].ext_fd = ext_fd;
           FD_SET(ext_fd, &fd_buffer);
         }                
         else{// if we did wrote join we are going to connect to someone we chose from the node list using ip_tcp_chosen
-            int ext_fd = create_client_tcp(our_node, ip_tcp_chosen, message_ip_tcp);
+            int ext_fd = create_client_tcp(our_node, ip_tcp_chosen, message_ip_tcp, name);
             our_node[0].ext_fd = ext_fd;
             FD_SET(ext_fd, &fd_buffer);
         }
@@ -170,7 +170,7 @@ void show_names(node *our_node){
     }
 }    
 
-void retrive(node *our_node, char *buffer){
+void retrive(node *our_node, char *buffer, int cache, message_type *name){
     buffer += strcspn(buffer, " "); // skip for the first space
     buffer += strspn(buffer, " ");  // skip all spaces
 
