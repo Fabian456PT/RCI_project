@@ -163,9 +163,72 @@ void show_names(node *our_node){
     }
 }    
 
-void retrive(node *our_node, char *buffer){
+void retrive(node *our_node, char *buffer, int cache){
     buffer += strcspn(buffer, " "); // skip for the first space
     buffer += strspn(buffer, " ");  // skip all spaces
 
+    char buffer_out[115];
+    int flag = 0;
+
+    // verify if we have the object in our node 
+    for (int i= 0; i < our_node[0].objects_num; i++) {
+        if(strcmp(our_node[0].object[i], buffer) == 0 /*|| strcmp(our_node[0].object[i], o que vai chegar do salva)*/){     
+            
+            printf("encontrado objeto: %s\n", buffer);
+            sprintf(buffer_out, "OBJECT %s", buffer);
+            //write(/*socket correspondente ao vizinho que mandou o interesse*/, buff_out, 7 + strlen(buffer));
+            flag = 1; // object found
+        }
+    }   
+
+    if (flag == 1) {  // eliminar da tabela de interesses
+        for (int i=0; i<our_node[0].interest_num; i++) {
+            if (strncmp(buffer, our_node[0].interest[i], strlen(buffer)) == 0) { // compare the 2 strings 
     
+                for (int j = i+1; j < our_node[0].interest_num; j++) {
+                    strncpy(our_node[0].interest[i], our_node[0].interest[j], 101); //shift the objects to the left, in the array
+                }
+    
+                // decrease the number of the objects registed in our node
+                our_node[0].interest_num --;
+    
+                printf("object deleted from interst table %s\n", buffer);
+                return;
+            }
+            
+        }
+    }
+
+    if (flag == 0) {
+        sprintf(buffer_out,"INTEREST %s", buffer);
+        write(our_node[0].ext_fd, buffer_out,  9+ strlen(buffer));
+
+        for (int j = 0; j < our_node[0].interest_num; j++) {
+            sprintf(buffer_out,"INTEREST %s", buffer);
+            write(our_node[0].intr_fd[j], buffer_out,  9+ strlen(buffer));
+        }
+
+        printf("nao foi encontrado o objeto: %s\n", buffer);
+        // verify if we have already registed the interest
+        for (int i = 0; i < our_node[0].interest_num; i++) {
+            
+            if (strcmp(our_node[0].interest[i], buffer) == 0) {
+                printf("Interesse já registado.\n");
+                return;
+            }
+                
+        }
+        
+        strncpy(our_node[0].interest[our_node[0].interest_num],buffer, 101);    
+        our_node[0].interest_num++;    
+
+    }
+
+}
+
+void show_interest_table(node *our_node, char* buffer){
+    printf("Pendent interests: \n");
+    for (int i = 0; i < our_node[0].interest_num; i++) {
+        printf("%s\n", our_node[0].interest[i]);
+    }
 }

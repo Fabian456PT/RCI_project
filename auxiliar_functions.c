@@ -16,6 +16,8 @@ void initialize_our_node(node *our_node, char *ip, char *tcp){
     our_node[0].our_socket = -1; // variable used when we need to create a server
     our_node[0].ext_fd = -1; // our outer node socket
     our_node[0].salv_fd = -1; // our save node socket
+    our_node[0].interest_num = 0;
+    our_node[0].objects_num = 0;
 
 }
 

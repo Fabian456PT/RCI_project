@@ -22,8 +22,10 @@ int main(int argc, char *argv[]){
 
     node our_node[1];
 
-    initialize_our_node(our_node, ip, tcp);
+    // set my counters to zero
 
+    initialize_our_node(our_node, ip, tcp);
+    
     // this is for the select() funtioc used to get messages 
     fd_set fd_buffer;
     fd_set fd_read;
@@ -110,7 +112,15 @@ int main(int argc, char *argv[]){
             else if (command == 9 || command == 10) {
                 create(our_node, buffer, cache);
             }
-            //delete
+            // retrieve
+            else if (command == 13 || command == 14) {
+                retrive(our_node, buffer, cache);
+            }
+            // interest table
+            else if (command == 17|| command == 18) {
+                show_interest_table(our_node, buffer);
+            }
+            // delete
             else if (command == 11 || command == 12) {
                 delete_obj(our_node, buffer);
             }

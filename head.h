@@ -33,6 +33,8 @@ typedef struct{
     int udp_server_fd;
     struct addrinfo *res;
     int objects_num;
+    int interest_num;
+    char interest[100][101];
     char object[][101];
 }node;
 
@@ -68,7 +70,11 @@ void show_topology(node *our_node);
 
 void show_names(node *our_node);
 
+void show_interest_table(node *our_node, char* buffer);
+
 void create(node *our_node, char *buffer, int cache);
+
+void retrive(node *our_node, char *buffer, int cache);
 
 void delete_obj(node *our_node, char *buffer);
 
