@@ -2,7 +2,7 @@
 #include <complex.h>
 #include <stdlib.h>
 
-char buffer_fd[30];
+char buffer_fd[50];
 
 ///// IP é o nosso e o TCP é a porta que tou a usar pra ouvir, nossa tb
 
@@ -39,6 +39,7 @@ int main(int argc, char *argv[]){
 
     id_struct message_ip_tcp[2];//variable used when receiving messages from possible clients
     id_struct ip_tcp_chosen[1]; // used when join to choose a node from the node list
+    message_type name[1];
     while(1){
 
         // update our select() function
@@ -48,7 +49,46 @@ int main(int argc, char *argv[]){
             printf("There was a error in select() function.\n");
         }
 
-        // If this condition is true there is something to read
+        if(FD_ISSET(our_node[0].ext_fd, &fd_read) != 0){
+            char buffer[50];
+            // if our outer node left
+            if(read(our_node[0].ext_fd, buffer, 50) == 0){
+                FD_CLR(our_node[0].ext_fd, &fd_read); 
+                outer_node_left(our_node, fd_buffer, name);
+            }
+            else{ 
+                get_message(buffer, message_ip_tcp, name);
+                // in case we receive a SAFE message
+                if(strcmp(message_ip_tcp[1].ip, "\0") != 0){
+                    // update our safe node
+                    strcpy(our_node[0].vzsalv.ip, message_ip_tcp[1].ip);
+                    strcpy(our_node[0].vzsalv.tcp, message_ip_tcp[1].tcp);
+                }
+                // sending OBJECT message to retreive
+                else{
+                    name[0].flag = -1; // just making sure that is the outer node that is receiving something to read, we say that putting "flag" as "-1"
+                    retrive(our_node, NULL, cache, name);
+                }
+                
+            }
+        }
+        // Checking if any of our inner nodes left or objects moment
+        for(int i = 0; i < our_node[0].intr_num; i++){
+            if(FD_ISSET(our_node[0].intr_fd[i], &fd_read) != 0){
+                char buffer[50];
+                // if we read "0" from one of our inner nodes socket that means that it left
+                if(read(our_node[0].intr_fd[i], buffer, 50) == 0){
+                    one_inner_node_left(our_node, i);
+                }
+                // if not is maybe an object
+                else{
+                    get_message(buffer, message_ip_tcp, name);
+                    name[0].flag = i;
+                    retrive(our_node, NULL, cache, name);
+                }
+            }
+        }
+        // If this condition is true there is something to read (someone is trying to connect)
         if (FD_ISSET(our_node[0].our_socket, &fd_read) != 0){
 
             printf("Someone is trying to connect\n");
@@ -63,9 +103,9 @@ int main(int argc, char *argv[]){
             }
 
             // ENTRY message that some possible inner node is trying to give           
-            get_message(buffer_fd, message_ip_tcp);
+            get_message(buffer_fd, message_ip_tcp, name);
 
-            after_someone_tried_to_connect(our_node, &newfd, message_ip_tcp, buffer_fd);
+            after_someone_tried_to_connect(our_node, &newfd, message_ip_tcp, buffer_fd, name);
             FD_SET(newfd, &fd_buffer); // add a new socket to read
 
 
@@ -97,7 +137,7 @@ int main(int argc, char *argv[]){
             }
             // if the command line is direct join or it was join, we enter here
             if(command == 1 || command == 2 || go_direct_join == 1){
-                int our_socket = direct_join(&go_direct_join, buffer, dj_connect, &net, our_node, ip_tcp_chosen, message_ip_tcp, tcp);   
+                int our_socket = direct_join(&go_direct_join, buffer, dj_connect, &net, our_node, ip_tcp_chosen, message_ip_tcp, tcp, fd_buffer, name);   
                 FD_SET(our_socket, &fd_buffer);              
             }
             // show topology

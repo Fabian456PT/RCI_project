@@ -51,7 +51,7 @@ int create_client_udp(char *regip, char *regudp, int *net, id_struct *ip_tcp_cho
 }
 
 
-int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_ip_tcp){
+int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_ip_tcp, message_type *name){
 
     int fd,errcode;
     //socklen_t addrlen;
@@ -95,7 +95,7 @@ int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_
         printf("There was a error receiving SAFE message!!\n");
     }
 
-    // We receive the SAFE message
+    // We receive a message from the node we tried to connect
     n = read(fd,buffer,500);
     if(n == -1)/*error*/exit(1);
 
@@ -104,7 +104,7 @@ int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_
     strcpy(our_node[0].vzext.tcp, dj_connect->tcp);
 
     // write the SAFE message in our_node variable
-    get_message(buffer,message_ip_tcp);
+    get_message(buffer,message_ip_tcp, name);
 
     if(strcmp(message_ip_tcp[0].ip, "/0") == 0){// if we just received a SAFE message and not a ENTRY + SAFE
         // Saving "salvaguarda" node 
@@ -152,7 +152,7 @@ int create_client_tcp(node *our_node, id_struct *dj_connect, id_struct *message_
             if(n == -1)/*error*/exit(1);
 
             //SAFE MESSAGE arrived
-            get_message(buffer,message_ip_tcp);
+            get_message(buffer,message_ip_tcp, name);
 
             // Saving "salvaguarda" node 
             strcpy(our_node[0].vzsalv.ip, message_ip_tcp[1].ip);
