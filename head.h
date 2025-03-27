@@ -90,13 +90,13 @@ void show_interest_table(node *our_node, char* buffer);
 
 void create(node *our_node, char *buffer, int cache);
 
-void retrive(node *our_node, char *buffer, int cache);
-
 void delete_obj(node *our_node, char *buffer);
 
 void leave(node *our_node, int *net);
 
 void exit();
+
+int no_obj_ournode(node *our_node, char *buffer, message_type *name, char *buffer_out);
 
 void retrive(node *our_node, char *buffer, int cache, message_type *name);
 

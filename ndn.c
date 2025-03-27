@@ -40,6 +40,7 @@ int main(int argc, char *argv[]){
     id_struct message_ip_tcp[2];//variable used when receiving messages from possible clients
     id_struct ip_tcp_chosen[1]; // used when join to choose a node from the node list
     message_type name[1];
+    name[0].flag = -2; // nós é que procuramos
     while(1){
 
         // update our select() function
@@ -154,7 +155,7 @@ int main(int argc, char *argv[]){
             }
             // retrieve
             else if (command == 13 || command == 14) {
-                retrive(our_node, buffer, cache);
+                retrive(our_node, buffer, cache, name);
             }
             // interest table
             else if (command == 17|| command == 18) {

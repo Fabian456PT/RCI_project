@@ -1,4 +1,5 @@
 #include "head.h"
+#include <string.h>
 
 void initialize_our_node(node *our_node, char *ip, char *tcp){
 
@@ -462,4 +463,73 @@ void after_someone_tried_to_connect(node *our_node, int *newfd, id_struct *messa
         }
     }
 
+}
+
+int no_obj_ournode(node *our_node, char *buffer, message_type *name, char *buffer_out){
+
+    int flag = 0; // representa o numero do no interno que mandou mensagem ou o do no externo
+
+    if (buffer != NULL) { // mensagem vem do terminal
+            
+        sprintf(buffer_out,"INTEREST %s", buffer);
+        write(our_node[0].ext_fd, buffer_out,  12 + strlen(buffer));
+
+        for (int i = 0; i < our_node[0].intr_num; i++) { // mandar a todos os internos 
+            
+            sprintf(buffer_out,"INTEREST %s", buffer);
+            write(our_node[0].intr_fd[i], buffer_out,  12 + strlen(buffer));
+        }
+        // verify if we have already registed the interest
+        for (int i = 0; i < our_node[0].interest_num; i++) {
+            
+            if (strcmp(our_node[0].interest[i], buffer) == 0) {
+                printf("Interesse já registado.\n");
+                return 0;
+            }
+                
+        }
+        
+        strncpy(our_node[0].interest[our_node[0].interest_num],buffer, 101);    // criar interesse na tabela de interesses
+        our_node[0].interest_num++;
+        flag = -2;
+
+    }
+    else { // mensagem vem de outro nó
+
+        if (name[0].flag != -1 ) { // se nao foi o externo a mandar o interesse, mandamos lhe um pedido de interesse
+            
+            sprintf(buffer_out,"INTEREST %s", name[0].name);
+            write(our_node[0].ext_fd, buffer_out,  12 + strlen(name[0].name));
+
+        }
+        else {
+            flag = -1;
+        }
+
+        for (int j = 0; j < our_node[0].intr_num; j++) { // mandar a todos os internos excepto ao que nos mandou mensagem 
+            
+            if (j == name[0].flag) { 
+                flag = j;
+                continue;
+            }
+            
+            sprintf(buffer_out,"INTEREST %s", name[0].name);
+            write(our_node[0].intr_fd[j], buffer_out,  12 + strlen(name[0].name));
+        }
+
+        // verify if we have already registed the interest
+        for (int i = 0; i < our_node[0].interest_num; i++) {
+            
+            if (strcmp(our_node[0].interest[i], name[0].name) == 0) {
+                printf("Interesse já registado.\n");
+                return 0;
+            }
+                
+        }
+        
+        strncpy(our_node[0].interest[our_node[0].interest_num],name[0].name, 101);    // criar interesse na tabela de interesses
+        our_node[0].interest_num++;        
+        
+    }
+    return flag;
 }

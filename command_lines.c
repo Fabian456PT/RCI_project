@@ -170,64 +170,103 @@ void show_names(node *our_node){
     }
 }    
 
-void retrive(node *our_node, char *buffer, int cache){
+void retrive(node *our_node, char *buffer, int cache, message_type *name){
     buffer += strcspn(buffer, " "); // skip for the first space
     buffer += strspn(buffer, " ");  // skip all spaces
 
     char buffer_out[115];
-    int flag = 0;
+    int found = 0;
+    int *sender;
+    int *noobject_count;
+    noobject_count[0] = 0; 
+    int total_expected_messages = 0;
+    
+    if (our_node[0].intr_num == 0) {
+        total_expected_messages = 1;
+    }
+    else {
+        total_expected_messages = our_node[0].intr_num;
+    }
 
     // verify if we have the object in our node 
-    for (int i= 0; i < our_node[0].objects_num; i++) {
-        if(strcmp(our_node[0].object[i], buffer) == 0 /*|| strcmp(our_node[0].object[i], o que vai chegar do salva)*/){     
-            
-            printf("encontrado objeto: %s\n", buffer);
-            sprintf(buffer_out, "OBJECT %s", buffer);
-            //write(/*socket correspondente ao vizinho que mandou o interesse*/, buff_out, 7 + strlen(buffer));
-            flag = 1; // object found
-        }
-    }   
 
-    if (flag == 1) {  // eliminar da tabela de interesses
+    if (strcmp(name[0].type, "INTEREST") == 0 || buffer != NULL) {  // so entra se alguem tiver interesse ou se escrever no terminal
+        for (int i= 0; i < our_node[0].objects_num; i++) { // procurar no meu no
+            // caso o buffer(terminal) seja igual a algum objeto / ou o name enviado(pelo no adjacente) seja igual a algum objeto
+            if(strcmp(our_node[0].object[i], name[0].name) == 0){     
+                printf("encontrado objeto: %s\n", our_node[0].object[i]);
+                sprintf(buffer_out, "OBJECT %s\n", our_node[0].object[i]);
+                if (name[0].flag != -1) { // 
+                 
+                    write(our_node[0].intr_fd[name[0].flag], buffer_out, 10 + strlen(buffer));
+    
+                }
+                else {
+                    write(our_node[0].ext_fd, buffer_out, 10 + strlen(buffer));
+                }
+                found = 1; // object found
+            }
+            else if (strcmp(our_node[0].object[i], buffer) == 0 ) {
+                printf("encontrado objeto: %s\n", our_node[0].object[i]);
+                found = 1; // object found
+            }
+        }   
+    
+    }
+    else if ((strcmp(name[0].type, "INTEREST") == 0 || buffer != NULL) && found == 0) {
+        *sender = no_obj_ournode(our_node, buffer, name, buffer_out); // manda interesse para todos e regista na tabela de interesses
+    }
+    else if (found == 0 && strcmp(name[0].type, "OBJECT") == 0) {   // nao encontrou objeto no nosso nó
+        
+        if (*sender == -1) { // foi o externo
+            sprintf(buffer_out, "OBJECT %s", name[0].name);
+            write(our_node[0].ext_fd, buffer_out, 10 + strlen(name[0].name));    
+            return;
+        }
+        else if (*sender == -2) {   
+            printf("OBJECT FOUND FROM OTHERS: %s", name[0].name);
+        }
+        else { // vai mandar o objeto para o respetivo vizinho interno
+            sprintf(buffer_out, "OBJECT %s", name[0].name);
+            write(our_node[0].intr_fd[*sender], buffer_out, 10 + strlen(name[0].name));
+        }
+        
+        // eliminar da tabela de interesses e adicionar à cache
         for (int i=0; i<our_node[0].interest_num; i++) {
             if (strncmp(buffer, our_node[0].interest[i], strlen(buffer)) == 0) { // compare the 2 strings 
-    
+
                 for (int j = i+1; j < our_node[0].interest_num; j++) {
                     strncpy(our_node[0].interest[i], our_node[0].interest[j], 101); //shift the objects to the left, in the array
                 }
-    
+
                 // decrease the number of the objects registed in our node
                 our_node[0].interest_num --;
-    
+
                 printf("object deleted from interst table %s\n", buffer);
                 return;
             }
-            
+
+            create(our_node, buffer, cache);
         }
+
     }
+    
+    if (found == 0 && strcmp(name[0].type, "NOOBJECT") == 0) { // TODOS DISSERAM QUE NAO TINHAM
+        noobject_count[0]++; // numero de noobjects
 
-    if (flag == 0) {
-        sprintf(buffer_out,"INTEREST %s", buffer);
-        write(our_node[0].ext_fd, buffer_out,  9+ strlen(buffer));
-
-        for (int j = 0; j < our_node[0].interest_num; j++) {
-            sprintf(buffer_out,"INTEREST %s", buffer);
-            write(our_node[0].intr_fd[j], buffer_out,  9+ strlen(buffer));
-        }
-
-        printf("nao foi encontrado o objeto: %s\n", buffer);
-        // verify if we have already registed the interest
-        for (int i = 0; i < our_node[0].interest_num; i++) {
-            
-            if (strcmp(our_node[0].interest[i], buffer) == 0) {
-                printf("Interesse já registado.\n");
-                return;
+        if (*noobject_count == total_expected_messages) {  // Se todos os nós responderam
+            // Envia a resposta final NOOBJECT para o nó que perguntou
+            if (*sender == -1) {
+                sprintf(buffer_out, "NOOBJECT %s", name[0].name);
+                write(our_node[0].ext_fd, buffer_out, strlen(buffer_out));
+            } else if (*sender != -1 && *sender != -2) {
+                sprintf(buffer_out, "NOOBJECT %s", name[0].name);
+                write(our_node[0].intr_fd[*sender], buffer_out, strlen(buffer_out));
             }
-                
+            else
+            printf("NOOBJECT FROM ANYONE: %s", name[0].name);
         }
-        
-        strncpy(our_node[0].interest[our_node[0].interest_num],buffer, 101);    
-        our_node[0].interest_num++;    
+
 
     }
 
